@@ -67,8 +67,8 @@ class TensorflowTemplateAgent:
 
     #! Modification here! Return with action
     def compute_action(self, observation):
-        (linear, angular) = self.model.predict(observation)
-        return linear, angular
+        prediction = self.model.predict(observation)
+        return prediction[0], prediction[1]
 
     #! Major Manipulation here Should not always change
     def on_received_get_commands(self, context: Context):
