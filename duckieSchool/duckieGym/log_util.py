@@ -21,6 +21,9 @@ class Logger:
         self._multithreaded_recording = ThreadPoolExecutor(4)
         # self.recording = []
 
+    def get_step_length(self):
+        return len(self.episode.steps)
+
     def log(self, step: Step, info: Dict):
         if self.episode.metadata is None:
             self.episode.metadata = info
@@ -30,7 +33,8 @@ class Logger:
         self.episode = Episode(version=SCHEMA_VERSION)
 
     def on_episode_done(self):
-        print(f"episode {self.episode_count} done, writing to file")
+        length = self.get_step_length()
+        print(f"episode {self.episode_count} done, total length {length} writing to file")
         # The next file cause all episodes to be written to the same pickle FP. (Overwrite first?)
         # self._multithreaded_recording.submit(lambda: self._commit(self.episode))
         self._commit(self.episode)
