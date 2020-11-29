@@ -68,6 +68,8 @@ class TensorflowTemplateAgent:
     #! Modification here! Return with action
     def compute_action(self, observation):
         prediction = self.model.predict(observation)
+        print(prediction)
+        print(prediction.shape)
         return prediction[0], prediction[1]
 
     #! Major Manipulation here Should not always change
