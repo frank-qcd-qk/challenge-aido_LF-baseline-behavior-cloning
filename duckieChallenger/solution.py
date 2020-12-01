@@ -3,18 +3,22 @@ import os
 import cv2
 import numpy as np
 import tensorflow as tf
-gpus = tf.config.experimental.list_physical_devices('GPU')
-if gpus:
-    # Restrict TensorFlow to only allocate 1GB of memory on the first GPU
-    try:
-        tf.config.experimental.set_virtual_device_configuration(
-            gpus[0],
-            [tf.config.experimental.VirtualDeviceConfiguration(memory_limit=1024)])
-        logical_gpus = tf.config.experimental.list_logical_devices('GPU')
-        print(len(gpus), "Physical GPUs,", len(logical_gpus), "Logical GPUs")
-    except RuntimeError as e:
-        # Virtual devices must be set before GPUs have been initialized
-        print(e)
+try:
+    gpus = tf.config.experimental.list_physical_devices('GPU')
+    if gpus:
+        # Restrict TensorFlow to only allocate 1GB of memory on the first GPU
+        try:
+            tf.config.experimental.set_virtual_device_configuration(
+                gpus[0],
+                [tf.config.experimental.VirtualDeviceConfiguration(memory_limit=1024)])
+            logical_gpus = tf.config.experimental.list_logical_devices('GPU')
+            print(len(gpus), "Physical GPUs,", len(logical_gpus), "Logical GPUs")
+        except RuntimeError as e:
+            # Virtual devices must be set before GPUs have been initialized
+            print(e)
+except:
+    print("GPU Memory Restriction set failure... System might not have gpu...")
+
 from aido_schemas import (Context, DB20Commands, DB20Observations, EpisodeStart, JPGImage, LEDSCommands,
                           logger, protocol_agent_DB20, PWMCommands, RGB, wrap_direct)
 from frankModel import FrankNet
@@ -42,6 +46,7 @@ class TensorflowTemplateAgent:
 
     def check_tensorflow_gpu(self):
         req = os.environ.get('AIDO_REQUIRE_GPU', None)
+        force_cpu = os.environ.get('FORCE_CPU_INFERENCE', None)
         name = tf.test.gpu_device_name()
         logger.info(f'gpu_device_name: {name!r} AIDO_REQUIRE_GPU = {req!r}')
         if req is not None:
