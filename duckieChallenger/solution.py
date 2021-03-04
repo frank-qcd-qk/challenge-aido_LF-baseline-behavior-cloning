@@ -51,6 +51,9 @@ class DuckieChallenger:
     def check_tensorflow_gpu(self):
         import tensorflow as tf
         req = os.environ.get('AIDO_REQUIRE_GPU', None)
+        force_cpu = os.environ.get('FORCE_CPU_INFERENCE', None)
+        if force_cpu:
+            return
         name = tf.test.gpu_device_name()
         logger.info(f'gpu_device_name: {name!r} AIDO_REQUIRE_GPU = {req!r}')
         if req is not None:
@@ -76,8 +79,8 @@ class DuckieChallenger:
 
     # ! Modification here! Return with action.
     def compute_action(self, observation):
-        (linear, angular) = self.model.predict(observation)
-        return linear, angular
+        prediction = self.model.predict(observation)
+        return prediction[0][0], prediction[0][1]
 
     # ! Major Manipulation here. Should not always change.
     def on_received_get_commands(self, context: Context):

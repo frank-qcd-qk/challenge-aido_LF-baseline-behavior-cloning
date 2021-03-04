@@ -73,6 +73,9 @@ class DuckieTrainer:
             self.observation, self.linear, self.angular, test_size=1-split, shuffle=True
         )
 
+        prediction_train = np.array(list(zip(linear_train,angular_train)))
+        prediction_valid = np.array(list(zip(linear_valid,angular_valid)))
+
         model = self.configure_model(lr=init_lr, epochs=epochs)
 
         callbacks_list = self.configure_callbacks()
@@ -80,10 +83,10 @@ class DuckieTrainer:
         # 11. GO!
         history = model.fit(
             x=observation_train,
-            y={"Linear": linear_train, "Angular": angular_train},
+            y=prediction_train,
             validation_data=(
                 observation_valid,
-                {"Linear": linear_valid, "Angular": angular_valid},
+                prediction_valid,
             ),
             epochs=EPOCHS,
             callbacks=callbacks_list,
@@ -106,12 +109,10 @@ class DuckieTrainer:
             exit()
 
     def configure_model(self, lr, epochs):
-        losses = {"Linear": "mse", "Angular": "mse"}
-        lossWeights = {"Linear": 2, "Angular": 10}
         model = FrankNet.build(200, 150)
         opt = tf.keras.optimizers.Adam(lr=lr, decay=lr / epochs)
         model.compile(
-            optimizer=opt, loss=losses, loss_weights=lossWeights, metrics="mse"
+            optimizer=opt, loss="mse", metrics="mse"
         )
         return model
 

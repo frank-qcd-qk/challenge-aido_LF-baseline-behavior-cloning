@@ -183,7 +183,7 @@ class HumanDriver:
                 cropped = obs_distorted_DS[0:150, 0:200]
 
                 # NOTICE: OpenCV changes the order of the channels !!!
-                cropped_final = cv2.cvtColor(cropped, cv2.COLOR_BGR2YUV)
+                cropped_final = cv2.cvtColor(cropped, cv2.COLOR_RGB2YUV)
                 self.playback_buffer.append((obs,action,reward))
                 step = Step(cropped_final, reward, action, done)
                 self.datagen.log(step, info)

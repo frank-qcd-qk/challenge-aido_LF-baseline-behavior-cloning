@@ -10,6 +10,8 @@ class Step:
     obs: np.ndarray = None
     reward: float = None
     action: List[float] = field(default_factory=list)
+    encoder: int = None
+    simulator: bool = None
     done: bool = False
 
 @dataclass

@@ -16,5 +16,6 @@ COPY solution.py /submission
 COPY FrankNet.h5 /submission
 COPY helperFncs.py /submission
 COPY frankModel.py /submission
+ENV FORCE_CPU_INFERENCE True
 
 ENTRYPOINT ["python3", "solution.py"]
