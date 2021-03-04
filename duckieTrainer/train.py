@@ -8,7 +8,7 @@ import numpy as np
 import tensorflow as tf
 from sklearn.model_selection import train_test_split
 
-from frank_model import FrankNet
+from frankModel import FrankNet
 from log_reader import Reader
 
 MODEL_NAME = "FrankNet"
