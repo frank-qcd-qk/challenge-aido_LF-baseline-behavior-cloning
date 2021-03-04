@@ -1,6 +1,6 @@
-
 from dataclasses import dataclass, field
 from typing import List, Dict
+
 import numpy as np
 
 SCHEMA_VERSION = "1.0.0"
@@ -12,6 +12,7 @@ class Step:
     reward: float = None
     action: List[float] = field(default_factory=list)
     done: bool = False
+
 
 @dataclass
 class Episode:

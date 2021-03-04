@@ -1,24 +1,22 @@
 import argparse
 import logging
 import os
-import time
 from datetime import datetime
 
 import numpy as np
 import tensorflow as tf
+from frankModel import FrankNet
 from sklearn.model_selection import train_test_split
 
-from frankModel import FrankNet
 from log_reader import Reader
 
 MODEL_NAME = "FrankNet"
 logging.basicConfig(level=logging.INFO)
 
-
-#! Default Configuration
-EPOCHS = 10000
+# ! Default Configuration
+EPOCHS = 10
 INIT_LR = 1e-3
-BATCH_SIZE = 64
+BATCH_SIZE = 128
 TRAIN_PERCENT = 0.8
 LOG_DIR = "/home/duckie/challenge-aido_LF-baseline-behavior-cloning/duckieTrainer/"
 LOG_FILE = "train.log"
@@ -29,15 +27,15 @@ OLD_DATASET = False
 
 class DuckieTrainer:
     def __init__(
-        self,
-        epochs,
-        init_lr,
-        batch_size,
-        log_dir,
-        log_file,
-        old_dataset,
-        experimental,
-        split,
+            self,
+            epochs,
+            init_lr,
+            batch_size,
+            log_dir,
+            log_file,
+            old_dataset,
+            experimental,
+            split,
     ):
         print("Observed TF Version: ", tf.__version__)
         print("Observed Numpy Version: ", np.__version__)
@@ -70,11 +68,11 @@ class DuckieTrainer:
             angular_train,
             angular_valid,
         ) = train_test_split(
-            self.observation, self.linear, self.angular, test_size=1-split, shuffle=True
+            self.observation, self.linear, self.angular, test_size=1 - split, shuffle=True
         )
 
-        prediction_train = np.array(list(zip(linear_train,angular_train)))
-        prediction_valid = np.array(list(zip(linear_valid,angular_valid)))
+        prediction_train = np.array(list(zip(linear_train, angular_train)))
+        prediction_valid = np.array(list(zip(linear_valid, angular_valid)))
 
         model = self.configure_model(lr=init_lr, epochs=epochs)
 
@@ -175,7 +173,8 @@ if __name__ == "__main__":
     parser.add_argument(
         "--learning_rate", help="Set the initial learning rate", default=INIT_LR
     )
-    parser.add_argument("--batch_size", help="Set the batch size", default=BATCH_SIZE)
+    parser.add_argument(
+        "--batch_size", help="Set the batch size", default=BATCH_SIZE)
     parser.add_argument(
         "--log_dir", help="Set the training log directory", default=LOG_DIR
     )
@@ -183,7 +182,8 @@ if __name__ == "__main__":
         "--log_file", help="Set the training log file name", default=LOG_FILE
     )
     parser.add_argument(
-        "--split",help="Set the training and test split point (input the percentage of training)",default=TRAIN_PERCENT
+        "--split", help="Set the training and test split point (input the percentage of training)",
+        default=TRAIN_PERCENT
     )
 
     args = parser.parse_args()
@@ -196,5 +196,5 @@ if __name__ == "__main__":
         log_file=args.log_file,
         old_dataset=args.old_dataset,
         experimental=args.experimental,
-        split = float(args.split)
+        split=float(args.split)
     )

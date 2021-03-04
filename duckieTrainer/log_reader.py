@@ -1,5 +1,5 @@
 import pickle
-from log_schema import Episode, Step, SCHEMA_VERSION
+
 
 class Reader:
     def __init__(self, log_file):
@@ -7,9 +7,9 @@ class Reader:
 
     def read(self):
         end = False
-        Observation=[]
-        Linear=[]
-        Angular=[]
+        Observation = []
+        Linear = []
+        Angular = []
 
         while not end:
             try:
@@ -24,15 +24,15 @@ class Reader:
             except EOFError:
                 end = True
 
-        return Observation,Linear,Angular
+        return Observation, Linear, Angular
 
     def modern_read(self):
         episode_data = None
         episode_index = 0
         end = False
-        Observation=[]
-        Linear=[]
-        Angular=[]
+        Observation = []
+        Linear = []
+        Angular = []
         while True:
             if episode_data is None:
                 try:
@@ -40,16 +40,16 @@ class Reader:
                     episode_index = 0
                 except EOFError:
                     print("End of log file!")
-                    print("Size: ",len(Observation)," ",len(Linear)," ",len(Angular))
-                    return Observation,Linear,Angular
+                    print("Size: ", len(Observation), " ", len(Linear), " ", len(Angular))
+                    return Observation, Linear, Angular
             try:
                 step = episode_data.steps[episode_index]
-                episode_index+=1
+                episode_index += 1
                 Observation.append(step.obs)
                 Linear.append(step.action[0])
                 Angular.append(step.action[1])
             except IndexError:
-                episode_data=None
+                episode_data = None
                 continue
 
     def close(self):
