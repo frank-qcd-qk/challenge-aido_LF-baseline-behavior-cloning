@@ -1,7 +1,7 @@
 protocol: aido2_db18_agent-z2
-challenge: [aido5-LF-sim-validation]
+challenge: [aido-LF-sim-validation]
 #challenge: [] # This will submit to all available challenges.
-user-label: "baseline-behavior-cloning"
+user-label: "BC Net V2"
 user-payload:
     features_required:
         gpu: 1
