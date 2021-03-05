@@ -5,12 +5,12 @@ from datetime import datetime
 
 import numpy as np
 import tensorflow as tf
-from frankModel import FrankNet
 from sklearn.model_selection import train_test_split
 
-from log_reader import Reader
+from duckieLog.log_util import Reader
+from duckieModels.cbcNet import cbcNet
 
-MODEL_NAME = "FrankNet"
+MODEL_NAME = "cbcNet"
 logging.basicConfig(level=logging.INFO)
 
 # ! Default Configuration
@@ -34,11 +34,8 @@ class DuckieTrainer:
             log_dir,
             log_file,
             old_dataset,
-            experimental,
             split,
     ):
-        print("Observed TF Version: ", tf.__version__)
-        print("Observed Numpy Version: ", np.__version__)
 
         self.create_dir()
 
@@ -67,14 +64,17 @@ class DuckieTrainer:
             linear_valid,
             angular_train,
             angular_valid,
+            anomaly_train,
+            anomaly_valid
+
         ) = train_test_split(
-            self.observation, self.linear, self.angular, test_size=1 - split, shuffle=True
+            self.observation, self.linear, self.angular, self.anomaly, test_size=1 - split, shuffle=True
         )
 
         prediction_train = np.array(list(zip(linear_train, angular_train)))
         prediction_valid = np.array(list(zip(linear_valid, angular_valid)))
 
-        model = self.configure_model(lr=init_lr, epochs=epochs)
+        model = cbcNet.get_model(init_lr, epochs)
 
         callbacks_list = self.configure_callbacks()
 
@@ -105,14 +105,6 @@ class DuckieTrainer:
                 "Create folder for trained model failed. Please check system permissions."
             )
             exit()
-
-    def configure_model(self, lr, epochs):
-        model = FrankNet.build(200, 150)
-        opt = tf.keras.optimizers.Adam(lr=lr, decay=lr / epochs)
-        model.compile(
-            optimizer=opt, loss="mse", metrics="mse"
-        )
-        return model
 
     def configure_callbacks(self):
         tensorboard = tf.keras.callbacks.TensorBoard(
@@ -156,12 +148,6 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Training Parameter Setup")
 
     parser.add_argument(
-        "--experimental",
-        help="Set if to use the experimental data loading method.",
-        action="store_true",
-        default=EXPERIMENTAL,
-    )
-    parser.add_argument(
         "--old_dataset",
         help="Set to use the old data log format",
         action="store_true",
@@ -195,6 +181,5 @@ if __name__ == "__main__":
         log_dir=args.log_dir,
         log_file=args.log_file,
         old_dataset=args.old_dataset,
-        experimental=args.experimental,
         split=float(args.split)
     )

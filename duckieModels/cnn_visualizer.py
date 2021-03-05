@@ -1,12 +1,11 @@
-import tensorflow as tf
-from tensorflow.keras.models import Model
-from frank_model import FrankNet
-import matplotlib.pyplot as plt
 import cv2
+import matplotlib.pyplot as plt
 import numpy as np
+from frank_model import FrankNet
+from tensorflow.keras.models import Model
 
 
-class FrankNetVisualizer:
+class CNNVisualizer:
     def __init__(self, path, img_path):
         self.model = FrankNet.build(200, 150)
         self.model.load_weights(path)
@@ -94,5 +93,5 @@ class FrankNetVisualizer:
 
 
 if __name__ == '__main__':
-    node = FrankNetVisualizer("FrankNet.h5", "curve.jpg")
+    node = CNNVisualizer("cbcNet.h5", "curve.jpg")
     node.visualize()

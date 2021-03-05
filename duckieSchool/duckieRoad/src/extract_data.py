@@ -1,16 +1,17 @@
 #!/usr/bin/env python3
 
+import collections
+import os
+from copy import copy
+
+import cv2
+import cv_bridge
 import numpy as np
 import pandas as pd
-import os
-import collections
 import rosbag
-import cv_bridge
-from copy import copy
+
+from duckieLog.log_util import Logger, Step
 from extract_data_functions import image_preprocessing, synchronize_data
-from log_util import Logger
-from log_schema import Episode, Step
-import cv2
 
 VEHICLE_NAME = 'avlduck2'
 
@@ -22,7 +23,6 @@ frank_logger = Logger(log_file='converted/dataset.log')
 
 
 def extract_messages(path, requested_topics):
-
     # check if path is string and requested_topics a list
     assert isinstance(path, str)
     assert isinstance(requested_topics, list)
@@ -53,7 +53,6 @@ def extract_messages(path, requested_topics):
 
 
 def main():
-
     # define the list of topics that you want to extract
     ros_topics = [
         # the duckiebot name can change from one bag file to the other, so define
@@ -86,7 +85,7 @@ def main():
         bag_ID = file.partition(".bag")[0]
 
         # extract the duckiebot name to complete the definition of the nodes
-        #duckiebot_name = file.partition("_")[2].partition(".bag")[0]
+        # duckiebot_name = file.partition("_")[2].partition(".bag")[0]
         duckiebot_name = VEHICLE_NAME
         # complete the topics names with the duckiebot name in the beginning
         ros_topics_temp = copy(ros_topics)
@@ -130,7 +129,7 @@ def main():
             # hack to get the timestamp of each image in <float 'secs.nsecs'> format instead of <int 'rospy.rostime.Time'>
             temp_timestamp = ext_images[num].timestamp
             img_timestamp = temp_timestamp.secs + temp_timestamp.nsecs * \
-                10 ** -len(str(temp_timestamp.nsecs))
+                            10 ** -len(str(temp_timestamp.nsecs))
 
             temp_df = pd.DataFrame({
                 'img': [img],
@@ -150,7 +149,7 @@ def main():
             # hack to get the timestamp of each image in <float 'secs.nsecs'> format instead of <int 'rospy.rostime.Time'>
             temp_timestamp = ext_car_cmds[num].timestamp
             vel_timestamp = temp_timestamp.secs + temp_timestamp.nsecs * \
-                10 ** -len(str(temp_timestamp.nsecs))
+                            10 ** -len(str(temp_timestamp.nsecs))
 
             temp_df = pd.DataFrame({
                 'vel_timestamp': [vel_timestamp],
@@ -182,8 +181,8 @@ def main():
 
         for i in range(synch_data.shape[0]):
             action = synch_data[i]
-            tobelogged_action = np.array([action[2], action[3]],dtype=float)
-            tobelogged_image = synch_imgs[i*150:(i+1)*150, :, :]
+            tobelogged_action = np.array([action[2], action[3]], dtype=float)
+            tobelogged_image = synch_imgs[i * 150:(i + 1) * 150, :, :]
             tobelogged_image = cv2.cvtColor(
                 tobelogged_image, cv2.COLOR_BGR2YUV)
             done = False if (i < synch_data.shape[0]) else True

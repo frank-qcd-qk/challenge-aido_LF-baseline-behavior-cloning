@@ -5,22 +5,21 @@ This is based on Frank's script to log runs using ground truth
 """
 
 import argparse
-import cv2
-import gym
 import math
-import numpy as np
-import pyglet
 import sys
 import time
-
-from log_util import Logger
-from log_schema import Episode, Step
-
 from typing import List
+
+import cv2
+import gym
+import numpy as np
+import pyglet
 from gym_duckietown.envs import DuckietownEnv
 
+from duckieLog.log_util import Logger, Step
 
 REWARD_INVALID_POSE = -1000
+
 
 class DataGenerator:
     def __init__(self, env, max_episodes, max_steps, log_file=None, downscale=False):
@@ -33,7 +32,7 @@ class DataGenerator:
         self.max_episodes = max_episodes
         self.downscale = downscale
 
-        #! Enter main event loop
+        # ! Enter main event loop
         print("Starting data generation")
 
         pyglet.clock.schedule_interval(
@@ -127,7 +126,7 @@ class DataGenerator:
 
         action = self.pure_pursuite(env)
 
-        #! GO! and get next
+        # ! GO! and get next
         # * Observation is 640x480 pixels
         obs, reward, done, info = env.step(action)
 
@@ -137,10 +136,10 @@ class DataGenerator:
             output_img = obs
             if self.downscale:
                 # Resize to (150x200)
-                #! resize to Nvidia standard:
+                # ! resize to Nvidia standard:
                 obs_distorted_DS = self.image_resize(obs, width=200)
 
-                #! ADD IMAGE-PREPROCESSING HERE!!!!!
+                # ! ADD IMAGE-PREPROCESSING HERE!!!!!
                 height, width = obs_distorted_DS.shape[:2]
                 # print('Distorted return image Height: ', height,' Width: ',width)
                 cropped = obs_distorted_DS[0:150, 0:200]
@@ -168,7 +167,7 @@ class DataGenerator:
 
 
 if __name__ == "__main__":
-    #! Parser sector:
+    # ! Parser sector:
     parser = argparse.ArgumentParser()
     parser.add_argument("--env-name", default=None)
     parser.add_argument("--map-name", default="zigzag_dists")
@@ -195,7 +194,7 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    #! Start Env
+    # ! Start Env
     if args.env_name is None:
         env = DuckietownEnv(
             map_name=args.map_name,
@@ -210,4 +209,5 @@ if __name__ == "__main__":
     else:
         env = gym.make(env=args.env_name)
 
-    node = DataGenerator(env, max_episodes=args.nb_episodes, max_steps=args.steps, log_file=args.logfile, downscale = args.downscale)
+    node = DataGenerator(env, max_episodes=args.nb_episodes, max_steps=args.steps, log_file=args.logfile,
+                         downscale=args.downscale)
