@@ -2,6 +2,7 @@ import argparse
 import logging
 import os
 from datetime import datetime
+from pathlib import Path
 
 import numpy as np
 import tensorflow as tf
@@ -18,8 +19,8 @@ EPOCHS = 10
 INIT_LR = 1e-3
 BATCH_SIZE = 128
 TRAIN_PERCENT = 0.8
-LOG_DIR = "training_stdout"
-LOG_FILE = "train.log"
+TRAINING_DATASET = "train.log"
+
 
 class DuckieTrainer:
     def __init__(
@@ -27,30 +28,22 @@ class DuckieTrainer:
             epochs,
             init_lr,
             batch_size,
-            log_dir,
             log_file,
-            old_dataset,
             split,
     ):
 
         # 0. Setup Folder Structure
         self.create_dirs()
+        exit()
 
-        # 1. Load all the datas
-        log_path = os.path.join(log_dir, log_file)
-        logging.info(f"Loading Datafile {log_path}")
+        # 1. Load Data
         try:
             self.observation, self.linear, self.angular = self.get_data(
-                log_file, old_dataset
+                log_file
             )
         except Exception:
-            try:
-                self.observation, self.linear, self.angular = self.get_data(
-                    log_file, old_dataset
-                )
-            except Exception:
-                logging.error("Loading dataset failed... exiting...")
-                exit(1)
+            logging.error("Loading dataset failed... exiting...")
+            exit(1)
         logging.info(f"Loading Datafile completed")
 
         # 2. Split training and testing
@@ -92,12 +85,10 @@ class DuckieTrainer:
 
         model.save(f"trainedModel/{MODEL_NAME}.h5")
 
-    @staticmethod
     def create_dirs(self):
         try:
-            os.makedirs("trainedModel")
-        except FileExistsError:
-            print("Directory already exists!")
+            dirname, _ = os.path.split(os.path.abspath(__file__))
+            Path(os.path.join(dirname, "trainedModel")).mkdir(parents=True, exist_ok=True)
         except OSError:
             print(
                 "Create folder for trained model failed. Please check system permissions."
@@ -139,18 +130,12 @@ class DuckieTrainer:
             Linear Length: {len(linear)}
             Angular Length: {len(angular)}"""
         )
-        return (np.array(observation), np.array(linear), np.array(angular))
+        return np.array(observation), np.array(linear), np.array(angular)
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Training Parameter Setup")
 
-    parser.add_argument(
-        "--old_dataset",
-        help="Set to use the old data log format",
-        action="store_true",
-        default=OLD_DATASET,
-    )
     parser.add_argument(
         "--epochs", help="Set the total training epochs", default=EPOCHS
     )
@@ -160,10 +145,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--batch_size", help="Set the batch size", default=BATCH_SIZE)
     parser.add_argument(
-        "--log_dir", help="Set the training log directory", default=LOG_DIR
-    )
-    parser.add_argument(
-        "--log_file", help="Set the training log file name", default=LOG_FILE
+        "--training_dataset", help="Set the training log file name", default=TRAINING_DATASET
     )
     parser.add_argument(
         "--split", help="Set the training and test split point (input the percentage of training)",
@@ -176,8 +158,6 @@ if __name__ == "__main__":
         epochs=int(args.epochs),
         init_lr=float(args.learning_rate),
         batch_size=int(args.batch_size),
-        log_dir=args.log_dir,
-        log_file=args.log_file,
-        old_dataset=args.old_dataset,
+        log_file=args.training_dataset,
         split=float(args.split)
     )
