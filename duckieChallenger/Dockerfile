@@ -13,9 +13,7 @@ RUN pip3 install --use-feature=2020-resolver -r .requirements.txt
 # Copy all solution files to workspace
 WORKDIR /submission
 COPY solution.py /submission
-COPY FrankNet.h5 /submission
 COPY helperFncs.py /submission
-COPY frankModel.py /submission
 ENV FORCE_CPU_INFERENCE True
 
 ENTRYPOINT ["python3", "solution.py"]

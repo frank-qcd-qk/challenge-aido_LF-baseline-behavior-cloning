@@ -1,14 +1,15 @@
 #!/usr/bin/env python3
 
-import tkinter as tk
+import argparse
 import pickle
 import signal
 import sys
-from typing import Dict, List
-from PIL import Image, ImageTk
-from log_schema import Episode, Step
-import argparse
+import tkinter as tk
+from typing import List
 
+from PIL import Image, ImageTk
+
+from duckieLog.log_util import Episode
 
 EPISODE_LABEL = "Episode: {}/{}"
 FRAME_LABEL = "Frame: {}/{}"

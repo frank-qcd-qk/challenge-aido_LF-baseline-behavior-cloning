@@ -1,9 +1,15 @@
 import pickle
+# Compatibility setting
+import sys
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
 from typing import List, Dict
 
 import numpy as np
+
+from duckieLog import log_util
+
+sys.modules['log_schema'] = log_util
 
 SCHEMA_VERSION = "1.0.0"
 
@@ -27,27 +33,6 @@ class Episode:
 class Reader:
     def __init__(self, log_file):
         self._log_file = open(log_file, 'rb')
-
-    def read(self):
-        end = False
-        Observation = []
-        Linear = []
-        Angular = []
-
-        while not end:
-            try:
-                log = pickle.load(self._log_file)
-                for entry in log:
-                    step = entry['step']
-                    Observation.append(step[0])
-                    action = step[1]
-                    Linear.append(action[0])
-                    Angular.append(action[1])
-
-            except EOFError:
-                end = True
-
-        return Observation, Linear, Angular
 
     def modern_read(self):
         episode_data = None

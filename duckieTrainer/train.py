@@ -18,12 +18,8 @@ EPOCHS = 10
 INIT_LR = 1e-3
 BATCH_SIZE = 128
 TRAIN_PERCENT = 0.8
-LOG_DIR = "/home/duckie/challenge-aido_LF-baseline-behavior-cloning/duckieTrainer/"
+LOG_DIR = "training_stdout"
 LOG_FILE = "train.log"
-
-EXPERIMENTAL = False
-OLD_DATASET = False
-
 
 class DuckieTrainer:
     def __init__(
@@ -37,7 +33,8 @@ class DuckieTrainer:
             split,
     ):
 
-        self.create_dir()
+        # 0. Setup Folder Structure
+        self.create_dirs()
 
         # 1. Load all the datas
         log_path = os.path.join(log_dir, log_file)
@@ -95,7 +92,8 @@ class DuckieTrainer:
 
         model.save(f"trainedModel/{MODEL_NAME}.h5")
 
-    def create_dir(self):
+    @staticmethod
+    def create_dirs(self):
         try:
             os.makedirs("trainedModel")
         except FileExistsError:
