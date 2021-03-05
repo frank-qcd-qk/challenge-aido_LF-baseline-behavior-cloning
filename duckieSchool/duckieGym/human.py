@@ -88,7 +88,7 @@ class HumanDriver:
 
     def image_resize(self, image, width=None, height=None, inter=cv2.INTER_AREA):
         """
-        Resize an image with a given width or a given height 
+        Resize an image with a given width or a given height
         and preserve the aspect ratio.
         """
         dim = None
