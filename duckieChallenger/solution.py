@@ -10,6 +10,14 @@ from aido_schemas import (Context, DB20Commands, DB20Observations, EpisodeStart,
 from helperFncs import image_resize
 
 
+def test_payload():
+    import tensorflow as tf
+    import os
+    print("Tensorflow Version Log: {}".format(tf.__version__))
+    print("GPU Availability Check: {}".format(tf.test.is_gpu_available()))
+    print("System CUDA observed: {}".format(os.system("nvcc -V")))
+
+
 def limit_gpu_memory(memory_limit=1024):
     """ Restricts TensorFlow to only allocated 1GB of memory on the first GPU"""
     import tensorflow as tf
@@ -35,6 +43,7 @@ class DuckieChallenger:
         context.info("Check GPU...")
 
         limit_gpu_memory()
+        test_payload()
         self.check_tensorflow_gpu()
 
         from cbcNet import cbcNet
