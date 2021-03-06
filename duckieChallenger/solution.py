@@ -4,9 +4,9 @@ from typing import Tuple
 
 import cv2
 import numpy as np
-
 from aido_schemas import (Context, DB20Commands, DB20Observations, EpisodeStart, JPGImage, LEDSCommands,
                           logger, protocol_agent_DB20, PWMCommands, RGB, wrap_direct)
+
 from helperFncs import image_resize
 
 
@@ -37,13 +37,12 @@ class DuckieChallenger:
         limit_gpu_memory()
         self.check_tensorflow_gpu()
 
-        from frankModel import FrankNet
+        from cbcNet import cbcNet
         from helperFncs import SteeringToWheelVelWrapper
         self.convertion_wrapper = SteeringToWheelVelWrapper()
 
         context.info('init()')
-        self.model = FrankNet.build(200, 150)
-        self.model.load_weights("FrankNet.h5")
+        self.model = cbcNet.get_inference("cbcNet.h5")
         self.current_image = np.zeros(self.expect_shape)
         self.input_image = np.zeros((150, 200, 3))
         self.to_predictor = np.expand_dims(self.input_image, axis=0)
@@ -79,7 +78,7 @@ class DuckieChallenger:
 
     # ! Modification here! Return with action.
     def compute_action(self, observation):
-        prediction = self.model.predict(observation)
+        prediction, anomaly = self.model.predict(observation)
         return prediction[0][0], prediction[0][1]
 
     # ! Major Manipulation here. Should not always change.

@@ -14,7 +14,7 @@ MODEL_NAME = "cbcNet"
 logging.basicConfig(level=logging.INFO)
 
 # ! Default Configuration
-EPOCHS = 10
+EPOCHS = 100
 INIT_LR = 1e-3
 BATCH_SIZE = 128
 TRAIN_PERCENT = 0.8
@@ -52,7 +52,6 @@ class DuckieTrainer:
         )
 
         model = cbcNet.get_model(init_lr, epochs)
-        exit()
         callbacks_list = self.configure_callbacks()
 
         # 11. GO!

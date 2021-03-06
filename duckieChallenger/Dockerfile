@@ -14,6 +14,8 @@ RUN pip3 install --use-feature=2020-resolver -r .requirements.txt
 WORKDIR /submission
 COPY solution.py /submission
 COPY helperFncs.py /submission
-ENV FORCE_CPU_INFERENCE True
+COPY cbcNet.py /submission
+COPY cbcNet.h5 /submission
+ENV FORCE_CPU_INFERENCE False
 
 ENTRYPOINT ["python3", "solution.py"]
