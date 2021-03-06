@@ -38,9 +38,10 @@ class Reader:
         episode_data = None
         episode_index = 0
         end = False
-        Observation = []
-        Linear = []
-        Angular = []
+        observation = []
+        linear = []
+        angular = []
+        anomaly = []
         while True:
             if episode_data is None:
                 try:
@@ -48,14 +49,15 @@ class Reader:
                     episode_index = 0
                 except EOFError:
                     print("End of log file!")
-                    print("Size: ", len(Observation), " ", len(Linear), " ", len(Angular))
-                    return Observation, Linear, Angular
+                    print("Size: ", len(observation), " ", len(linear), " ", len(angular))
+                    return observation, linear, angular, anomaly
             try:
                 step = episode_data.steps[episode_index]
                 episode_index += 1
-                Observation.append(step.obs)
-                Linear.append(step.action[0])
-                Angular.append(step.action[1])
+                observation.append(step.obs)
+                linear.append(step.action[0])
+                angular.append(step.action[1])
+                anomaly.append(step.obstacle)
             except IndexError:
                 episode_data = None
                 continue

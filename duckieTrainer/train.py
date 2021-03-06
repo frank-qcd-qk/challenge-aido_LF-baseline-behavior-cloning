@@ -122,7 +122,7 @@ class DuckieTrainer:
         reader = Reader(file_path)
 
         observation, linear, angular = (
-            reader.read() if old_dataset else reader.modern_read()
+            reader.modern_read()
         )
 
         logging.info(
