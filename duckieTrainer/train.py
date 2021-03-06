@@ -4,11 +4,10 @@ import os
 from datetime import datetime
 from pathlib import Path
 
-import numpy as np
 import tensorflow as tf
 from sklearn.model_selection import train_test_split
 
-from duckieLog.log_util import Reader
+from duckieLog.log_util import read_dataset
 from duckieModels.cbcNet import cbcNet
 
 MODEL_NAME = "cbcNet"
@@ -34,38 +33,27 @@ class DuckieTrainer:
 
         # 0. Setup Folder Structure
         self.create_dirs()
-        exit()
 
         # 1. Load Data
-        try:
-            self.observation, self.linear, self.angular = self.get_data(
-                log_file
-            )
-        except Exception:
-            logging.error("Loading dataset failed... exiting...")
-            exit(1)
-        logging.info(f"Loading Datafile completed")
-
+        self.observation, self.prediction, self.anomaly = read_dataset(
+            log_file
+        )
         # 2. Split training and testing
         (
             observation_train,
             observation_valid,
-            linear_train,
-            linear_valid,
-            angular_train,
-            angular_valid,
+            prediction_train,
+            prediction_valid,
             anomaly_train,
             anomaly_valid
 
         ) = train_test_split(
-            self.observation, self.linear, self.angular, self.anomaly, test_size=1 - split, shuffle=True
+            self.observation, self.prediction, self.anomaly, test_size=1 - split, shuffle=True
         )
-
-        prediction_train = np.array(list(zip(linear_train, angular_train)))
-        prediction_valid = np.array(list(zip(linear_valid, angular_valid)))
+        print(prediction_train)
 
         model = cbcNet.get_model(init_lr, epochs)
-
+        exit()
         callbacks_list = self.configure_callbacks()
 
         # 11. GO!
@@ -115,22 +103,7 @@ class DuckieTrainer:
 
         return [checkpoint1, checkpoint2, tensorboard]
 
-    def get_data(self, file_path, old_dataset=False):
-        """
-        Returns (observation: np.array, linear: np.array, angular: np.array)
-        """
-        reader = Reader(file_path)
 
-        observation, linear, angular = (
-            reader.modern_read()
-        )
-
-        logging.info(
-            f"""Observation Length: {len(observation)}
-            Linear Length: {len(linear)}
-            Angular Length: {len(angular)}"""
-        )
-        return np.array(observation), np.array(linear), np.array(angular)
 
 
 if __name__ == "__main__":

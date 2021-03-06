@@ -30,40 +30,32 @@ class Episode:
     version: str = SCHEMA_VERSION
 
 
-class Reader:
-    def __init__(self, log_file):
-        self._log_file = open(log_file, 'rb')
-
-    def modern_read(self):
-        episode_data = None
-        episode_index = 0
-        end = False
-        observation = []
-        linear = []
-        angular = []
-        anomaly = []
-        while True:
-            if episode_data is None:
-                try:
-                    episode_data = pickle.load(self._log_file)
-                    episode_index = 0
-                except EOFError:
-                    print("End of log file!")
-                    print("Size: ", len(observation), " ", len(linear), " ", len(angular))
-                    return observation, linear, angular, anomaly
+def read_dataset(log_file_path):
+    log_file = open(log_file_path, 'rb')
+    episode_data = None
+    episode_index = 0
+    observation = []
+    prediction = []
+    anomaly = []
+    while True:
+        if episode_data is None:
             try:
-                step = episode_data.steps[episode_index]
-                episode_index += 1
-                observation.append(step.obs)
-                linear.append(step.action[0])
-                angular.append(step.action[1])
-                anomaly.append(step.obstacle)
-            except IndexError:
-                episode_data = None
-                continue
-
-    def close(self):
-        self._log_file.close()
+                episode_data = pickle.load(log_file)
+                episode_index = 0
+            except EOFError:
+                print("End of log file!")
+                print("Size: ", len(observation), " ", len(prediction), " ", len(anomaly))
+                log_file.close()
+                return np.array(observation), np.array(prediction), np.array(anomaly)
+        try:
+            step = episode_data.steps[episode_index]
+            episode_index += 1
+            observation.append(step.obs)
+            prediction.append(step.action)
+            anomaly.append(step.obstacle)
+        except IndexError:
+            episode_data = None
+            continue
 
 
 class Logger:
