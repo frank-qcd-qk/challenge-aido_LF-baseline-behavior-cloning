@@ -50,7 +50,6 @@ class DuckieTrainer:
         ) = train_test_split(
             self.observation, self.prediction, self.anomaly, test_size=1 - split, shuffle=True
         )
-        print(prediction_train)
 
         model = cbcNet.get_model(init_lr, epochs)
         exit()

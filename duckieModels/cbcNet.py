@@ -1,9 +1,10 @@
 import tensorflow as tf
+from tensorflow.keras.backend import less_equal as Less_equal
+from tensorflow.keras.backend import switch as Switch
 from tensorflow.keras.layers import Conv2D, Activation, Lambda, Flatten, Dense
 
 
 class cbcNet:
-
     @staticmethod
     def build_cbc_net(rgb_image):
         # ? Input Normalization
@@ -49,17 +50,22 @@ class cbcNet:
         prediction = Dense(1164, kernel_initializer='normal', activation='relu')(bc_branch)
         prediction = Dense(100, kernel_initializer='normal', activation='relu')(prediction)
 
-        # ? Switch
-        if anomaly <= 0.5:
-            prediction = Dense(50, kernel_initializer='normal', activation='relu')(prediction)
-            prediction = Dense(10, kernel_initializer='normal', activation='relu')(prediction)
-            prediction = Dense(2, kernel_initializer='normal', name="Command")(prediction)
-        else:
-            # ? Fully Connected
-            prediction = Dense(50, kernel_initializer='normal', activation='relu')(prediction)
-            prediction = Dense(10, kernel_initializer='normal', activation='relu')(prediction)
-            prediction = Dense(2, kernel_initializer='normal', name="Command")(prediction)
+        def anomaly_controller(x):
+            x = Dense(50, kernel_initializer='normal', activation='relu')(x)
+            x = Dense(10, kernel_initializer='normal', activation='relu')(x)
+            x = Dense(2, kernel_initializer='normal')(x)
+            return x
 
+        def lane_following_controller(y):
+            y = Dense(50, kernel_initializer='normal', activation='relu')(y)
+            y = Dense(10, kernel_initializer='normal', activation='relu')(y)
+            y = Dense(2, kernel_initializer='normal')(y)
+            return y
+
+        # ? Switch
+        prediction = Switch(Less_equal(anomaly, 0.5), anomaly_controller(prediction),
+                            lane_following_controller(prediction))
+        prediction = tf.identity(prediction, name="Command")
         return prediction, anomaly
 
     @staticmethod
@@ -75,7 +81,7 @@ class cbcNet:
         opt = tf.keras.optimizers.Adam(lr=lr, decay=lr / epochs)
         # ! Compile Model
         losses = {"Command": "mse", "Anomaly": "BinaryCrossentropy"}
-        loss_weights = {"Command": 1, "Anomaly": "5"}
+        loss_weights = {"Command": 1, "Anomaly": 5}
 
         model.compile(
             optimizer=opt, loss=losses, loss_weights=loss_weights
