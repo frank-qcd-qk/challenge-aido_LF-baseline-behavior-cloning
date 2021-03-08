@@ -15,4 +15,4 @@ trainlogs
 *.resolved
 requirements.resolved
 !duckieChallenger/FrankNet.h5
-!duckieTrainer/train.log
+duckieTrainer/train.log

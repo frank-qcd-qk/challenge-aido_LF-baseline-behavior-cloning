@@ -1,45 +1,41 @@
 import argparse
+import os
 import pickle
+import sys
 
-from duckieLog.log_util import Episode
+from duckieLog import log_util
+
+sys.modules['log_schema'] = log_util
 
 SCHEMA_VERSION = "1.0.0"
 
 
 class Combiner:
-    def __init__(self, log1, log2, output):
-        self.episode = Episode(version=SCHEMA_VERSION)
-        self._log1 = open(log1, 'rb')
-        self._log2 = open(log2, 'rb')
+    def __init__(self, output):
+        self.log_lists = open("log_list.txt", 'rb')
+        self.log_dirs = self.log_lists.read().splitlines()
+        self._log_objects = []
+        for a_log_file in self.log_dirs:
+            if os.path.exists(a_log_file):
+                self._log_objects.append(open(a_log_file, 'rb'))
+            else:
+                print("{} is not a valid log file path! Skipping...".format(a_log_file))
         self._output = open(output, 'wb')
         self.episode_counter = 0
-        self.combine()
+        self.combine(self._log_objects)
 
-    def combine(self):
-        episode_data = None
-        episode_index = 0
-        while True:
-            try:
-                episode_data = pickle.load(self._log1)
-                episode_index += 1
-            except EOFError:
-                print("Captured total {} episodes".format(episode_index))
-                print("End of log file!")
-                break
-            self.commit_episode(episode_data)
-            self.episode = Episode(version=SCHEMA_VERSION)
-            self.episode_counter += 1
+    def combine(self, object_list):
+        for file_obj in object_list:
+            while True:
+                try:
+                    episode_data = pickle.load(file_obj)
+                except EOFError:
+                    print("End of log file!")
+                    break
+                self.commit_episode(episode_data)
+                self.episode_counter += 1
 
-        while True:
-            try:
-                episode_data = pickle.load(self._log2)
-                episode_index += 1
-            except EOFError:
-                print("Captured total {} episodes".format(episode_index))
-                print("End of log file!")
-                break
-            self.commit_episode(episode_data)
-            self.episode_counter += 1
+        print("Merging Complete. Total Episode: {}".format(self.episode_counter))
         self.close()
 
     def commit_episode(self, episode):
@@ -47,21 +43,12 @@ class Combiner:
         self._output.flush()
 
     def close(self):
-        self._log1.close()
-        self._log2.close()
         self._output.close()
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument("--log1", default=None)
-    parser.add_argument("--log2", default=None)
-    parser.add_argument("--output", default=None)
+    parser.add_argument("--output", default="train.log")
     args = parser.parse_args()
 
-    try:
-        assert args.log1 is not None or args.log2 is not None or args.output is not None
-    except  Exception:
-        print("Please provide all inputs! 3 should be given.")
-
-    Combiner(args.log1, args.log2, args.output)
+    Combiner(args.output)

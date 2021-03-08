@@ -14,7 +14,7 @@ MODEL_NAME = "cbcNet"
 logging.basicConfig(level=logging.INFO)
 
 # ! Default Configuration
-EPOCHS = 100
+EPOCHS = 10000
 INIT_LR = 1e-3
 BATCH_SIZE = 128
 TRAIN_PERCENT = 0.8
@@ -100,8 +100,6 @@ class DuckieTrainer:
         )
 
         return [checkpoint1, checkpoint2, tensorboard]
-
-
 
 
 if __name__ == "__main__":

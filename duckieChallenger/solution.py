@@ -88,6 +88,7 @@ class DuckieChallenger:
     # ! Modification here! Return with action.
     def compute_action(self, observation):
         prediction, anomaly = self.model.predict(observation)
+        print("Road Anomaly Detection: {}".format(anomaly))
         return prediction[0][0], prediction[0][1]
 
     # ! Major Manipulation here. Should not always change.

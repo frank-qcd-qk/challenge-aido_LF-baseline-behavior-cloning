@@ -13,4 +13,4 @@ if __name__ == "__main__":
         observation = np.expand_dims(an_img, axis=0)
         prediction, anomaly = model.predict(observation)
         print(prediction[0][0], prediction[0][1])
-        print(anomaly[0][0] > 0.5)
+        print(anomaly[0][0] < 0.5)

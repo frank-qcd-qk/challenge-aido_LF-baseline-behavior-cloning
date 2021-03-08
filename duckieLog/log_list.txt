@@ -1,0 +1,7 @@
+/home/frank/duckietown/aido6/log_sources/Mar7_zig_zag_obstacle1.log
+/home/frank/duckietown/aido6/log_sources/Mar7_zig_zag_obstacle2.log
+/home/frank/duckietown/aido6/log_sources/Mar7_zig_zag_obstacle3.log
+/home/frank/duckietown/aido6/log_sources/Mar7_zig_zag_obstacle4.log
+/home/frank/duckietown/aido6/log_sources/Mar7_zig_zag_obstacle5.log
+/home/frank/duckietown/aido6/log_sources/Mar7_zig_zag_obstacle6.log
+/home/frank/duckietown/aido6/log_sources/Mar7_zig_zag_obstacle7.log

@@ -1,9 +1,10 @@
-protocol: aido2_db18_agent-z2
-challenge: [aido-LF-sim-validation]
-#challenge: [] # This will submit to all available challenges.
-user-label: "BC Net V2"
+protocol: aido5-db20-full-z2
+challenge: [ aido-LFP_full-sim-validation ]
+#protocol: aido2_db18_agent-z2
+#challenge: [aido-LF-sim-validation]
+user-label: "CBC Net v1"
 user-payload:
     features_required:
         gpu: 1
 description: |
-    Behavior cloning baseline.
+    Simple Switch, Best Loss, March7 Dataset.
