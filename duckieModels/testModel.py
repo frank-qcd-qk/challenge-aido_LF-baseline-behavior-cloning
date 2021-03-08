@@ -30,8 +30,9 @@ def load_anomaly_example(anomaly):
 
 
 def single_test(model):
-    image = np.asarray(load_anomaly_example(anomaly=True))
-    output = model.predict(image)
+    image = np.zeros((150, 200, 3))
+    obs = np.expand_dims(image, axis=0)
+    output = model.predict(obs)
     print(output)
 
 
@@ -113,5 +114,5 @@ def model_vis(model):
 
 
 if __name__ == "__main__":
-    loaded_model = cbcNet.get_inference("cbcNet.h5")
+    loaded_model = cbcNet.get_inference(weigths="cbcNet_LinkMethod_best_validation.h5")
     single_test(loaded_model)

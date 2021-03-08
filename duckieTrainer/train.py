@@ -14,7 +14,7 @@ MODEL_NAME = "cbcNet"
 logging.basicConfig(level=logging.INFO)
 
 # ! Default Configuration
-EPOCHS = 10000
+EPOCHS = 100
 INIT_LR = 1e-3
 BATCH_SIZE = 128
 TRAIN_PERCENT = 0.8
@@ -59,15 +59,13 @@ class DuckieTrainer:
             model = cbcNet.get_model(init_lr, epochs)
             callbacks_list = self.configure_callbacks()
 
-            print(observation_train.shape)
-            exit()
             # 11. GO!
             history = model.fit(
                 x=observation_train,
-                y={"tf.keras.backend.switch": prediction_train, "Anomaly_Out": anomaly_train},
+                y={"tf.where": prediction_train, "Anomaly_Out": anomaly_train},
                 validation_data=(
                     observation_valid,
-                    {"tf.keras.backend.switch": prediction_valid, "Anomaly_Out": anomaly_valid},
+                    {"tf.where": prediction_valid, "Anomaly_Out": anomaly_valid},
                 ),
                 epochs=EPOCHS,
                 callbacks=callbacks_list,

@@ -4,7 +4,7 @@ from tensorflow.keras.backend import switch as Switch
 from tensorflow.keras.layers import Conv2D, Lambda, Flatten, Dense
 
 
-class cbcNet:
+class cbcNetv2:
     @staticmethod
     def build_cbc_anomaly_detector(rgb_image):
         # ? Input Normalization

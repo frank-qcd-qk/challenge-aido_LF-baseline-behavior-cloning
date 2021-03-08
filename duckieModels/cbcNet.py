@@ -1,6 +1,5 @@
 import tensorflow as tf
 from tensorflow.keras.backend import less_equal as Less_equal
-from tensorflow.keras.backend import switch as Switch
 from tensorflow.keras.layers import Conv2D, Lambda, Flatten, Dense
 
 
@@ -54,7 +53,8 @@ class cbcNet:
         y = Dense(2, kernel_initializer='normal', name='BCB_Out')(y)
 
         # ? Switch
-        prediction = Switch(Less_equal(anomaly, 0.5), x, y)
+        # prediction = Switch(Less_equal(anomaly, 0.5), x, y)
+        prediction = tf.where(Less_equal(anomaly, 0.5), x, y, name="Prediction")
         return prediction, anomaly
 
     @staticmethod
@@ -69,8 +69,8 @@ class cbcNet:
         # ! Setup Optimizer
         opt = tf.keras.optimizers.Adam(lr=lr, decay=lr / epochs)
         # ! Compile Model
-        losses = {"tf.keras.backend.switch": "mse", "Anomaly_Out": "mse"}
-        loss_weights = {"tf.keras.backend.switch": 10, "Anomaly_Out": 1}
+        losses = {"tf.where": "mse", "Anomaly_Out": "binary_crossentropy"}
+        loss_weights = {"tf.where": 10, "Anomaly_Out": 1}
 
         model.compile(
             optimizer=opt, loss=losses, loss_weights=loss_weights
