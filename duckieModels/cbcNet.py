@@ -86,12 +86,3 @@ class cbcNet:
         model = tf.keras.Model(inputs=rgb_input, outputs=[driving_cmd, anomaly_detection], name="cbcNet")
         model.load_weights(weigths)
         return model
-
-
-if __name__ == "__main__":
-    model = cbcNet.get_model(lr=0.1, epochs=1000)
-    print(model.summary())
-    tf.keras.utils.plot_model(
-        model, to_file='model.png', show_shapes=True, show_dtype=True,
-        show_layer_names=True, rankdir='TB', expand_nested=True, dpi=128
-    )
