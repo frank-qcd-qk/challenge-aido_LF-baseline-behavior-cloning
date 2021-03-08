@@ -5,7 +5,7 @@ from datetime import datetime
 from pathlib import Path
 
 import tensorflow as tf
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split, KFold
 
 from duckieLog.log_util import read_dataset
 from duckieModels.cbcNet import cbcNet
@@ -19,6 +19,11 @@ INIT_LR = 1e-3
 BATCH_SIZE = 128
 TRAIN_PERCENT = 0.8
 TRAINING_DATASET = "train.log"
+DATA_FEED = "Split"
+FOLD_SIZE = 10
+# Define per-fold score containers
+acc_per_fold = []
+loss_per_fold = []
 
 
 class DuckieTrainer:
@@ -39,37 +44,44 @@ class DuckieTrainer:
             log_file
         )
         # 2. Split training and testing
-        (
-            observation_train,
-            observation_valid,
-            prediction_train,
-            prediction_valid,
-            anomaly_train,
-            anomaly_valid
-
-        ) = train_test_split(
-            self.observation, self.prediction, self.anomaly, test_size=1 - split, shuffle=True
-        )
-
-        model = cbcNet.get_model(init_lr, epochs)
-        callbacks_list = self.configure_callbacks()
-
-        # 11. GO!
-        history = model.fit(
-            x=observation_train,
-            y=prediction_train,
-            validation_data=(
+        if DATA_FEED == "Split":
+            (
+                observation_train,
                 observation_valid,
+                prediction_train,
                 prediction_valid,
-            ),
-            epochs=EPOCHS,
-            callbacks=callbacks_list,
-            shuffle=True,
-            batch_size=BATCH_SIZE,
-            verbose=0,
-        )
+                anomaly_train,
+                anomaly_valid
 
-        model.save(f"trainedModel/{MODEL_NAME}.h5")
+            ) = train_test_split(
+                self.observation, self.prediction, self.anomaly, test_size=1 - split, shuffle=True
+            )
+            model = cbcNet.get_model(init_lr, epochs)
+            callbacks_list = self.configure_callbacks()
+
+            print(observation_train.shape)
+            exit()
+            # 11. GO!
+            history = model.fit(
+                x=observation_train,
+                y={"tf.keras.backend.switch": prediction_train, "Anomaly_Out": anomaly_train},
+                validation_data=(
+                    observation_valid,
+                    {"tf.keras.backend.switch": prediction_valid, "Anomaly_Out": anomaly_valid},
+                ),
+                epochs=EPOCHS,
+                callbacks=callbacks_list,
+                shuffle=True,
+                batch_size=BATCH_SIZE,
+                verbose=0,
+            )
+
+            model.save(f"trainedModel/{MODEL_NAME}.h5")
+        elif DATA_FEED == "KFold":
+            kfold = KFold(n_splits=FOLD_SIZE, shuffle=True)
+            fold_no = 1
+            for train_idx, test_idx in kfold.split(self.observation, self.prediction):
+                pass
 
     def create_dirs(self):
         try:

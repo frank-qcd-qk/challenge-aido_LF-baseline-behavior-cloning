@@ -6,6 +6,7 @@ from matplotlib import cm
 from matplotlib import pyplot as plt
 from tf_keras_vis.gradcam import Gradcam
 from tf_keras_vis.utils import normalize
+from vis.visualization import visualize_cam, overlay
 
 from cbcNet import cbcNet
 
@@ -29,8 +30,9 @@ def load_anomaly_example(anomaly):
 
 
 def single_test(model):
-    output = model.predict(np.asarray(load_anomaly_example(anomaly=True)))
-    print(output[1][1])
+    image = np.asarray(load_anomaly_example(anomaly=True))
+    output = model.predict(image)
+    print(output)
 
 
 def naive_test(model):
@@ -49,7 +51,7 @@ def naive_test(model):
         print(prediction[0][0], prediction[0][1])
 
 
-def model_vis(model):
+def model_vis_broken(model):
     images = np.asarray(load_anomaly_example(anomaly=True))
 
     # Rendering
@@ -95,6 +97,21 @@ def model_vis(model):
     plt.show()
 
 
+def model_vis(model):
+    images = np.asarray(load_anomaly_example(anomaly=True))
+    input_img = images[0]
+    titles = ['right steering', 'left steering', 'maintain steering']
+    modifiers = [None, 'negate', 'small_values']
+    for i, modifier in enumerate(modifiers):
+        heatmap = visualize_cam(model, layer_idx=-1, filter_indices=0,
+                                seed_input=input_img, grad_modifier=modifier)
+        plt.figure()
+        plt.title(titles[i])
+        # Overlay is used to alpha blend heatmap onto img.
+        jet_heatmap = np.uint8(cm.jet(heatmap)[..., :3] * 255)
+        plt.imshow(overlay(input_img, jet_heatmap, alpha=0.7))
+
+
 if __name__ == "__main__":
-    loaded_model = cbcNet.get_inference("cbcNet_CallbackMethod.h5")
-    model_vis(loaded_model)
+    loaded_model = cbcNet.get_inference("cbcNet.h5")
+    single_test(loaded_model)

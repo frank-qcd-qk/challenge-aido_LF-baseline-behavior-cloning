@@ -6,25 +6,9 @@ from tensorflow.keras.layers import Conv2D, Lambda, Flatten, Dense
 
 class cbcNet:
     @staticmethod
-    def build_cbc_net(rgb_image):
+    def build_cbc_anomaly_detector(rgb_image):
         # ? Input Normalization
         normalized_image = Lambda(lambda x: x / 255.0)(rgb_image)
-
-        # ? Behavior Cloning:
-        # ? L1: CONV => RELU
-        bc_branch = Conv2D(24, (5, 5), strides=(2, 2), padding="valid", activation='relu', name='BC_Conv1')(
-            normalized_image)
-        # ? L2: CONV => RELU
-        bc_branch = Conv2D(36, (5, 5), strides=(2, 2), activation='relu', padding="valid", name='BC_Conv2')(bc_branch)
-        # ? L3: CONV => RELU
-        bc_branch = Conv2D(48, (5, 5), strides=(2, 2), activation='relu', padding="valid", name='BC_Conv3')(bc_branch)
-        # ? L4: CONV => RELU
-        bc_branch = Conv2D(64, (3, 3), activation='relu', padding="valid", name='BC_Conv4')(bc_branch)
-        # ? L5: CONV => RELU
-        bc_branch = Conv2D(64, (3, 3), activation='relu', padding="valid", name='BC_Conv5')(bc_branch)
-        # ? Flatten
-        bc_branch = Flatten()(bc_branch)
-
         # ? Anomaly Detector:
         # ? L1: CONV => RELU
         anomaly_branch = Conv2D(24, (5, 5), strides=(2, 2), activation='relu', padding="valid", name='AN_Conv1')(
@@ -41,6 +25,26 @@ class cbcNet:
         anomaly_branch = Dense(50, kernel_initializer='normal', activation='relu', name='AN_FC2')(anomaly_branch)
         anomaly_branch = Dense(10, kernel_initializer='normal', activation='relu', name='AN_FC3')(anomaly_branch)
         anomaly = Dense(1, kernel_initializer='normal', activation='sigmoid', name="Anomaly_Out")(anomaly_branch)
+        return anomaly
+
+    @staticmethod
+    def build_cbc_net(rgb_image, anomaly_inject):
+        # ? Input Normalization
+        normalized_image = Lambda(lambda x: x / 255.0)(rgb_image)
+        # ? Behavior Cloning:
+        # ? L1: CONV => RELU
+        bc_branch = Conv2D(24, (5, 5), strides=(2, 2), padding="valid", activation='relu', name='BC_Conv1')(
+            normalized_image)
+        # ? L2: CONV => RELU
+        bc_branch = Conv2D(36, (5, 5), strides=(2, 2), activation='relu', padding="valid", name='BC_Conv2')(bc_branch)
+        # ? L3: CONV => RELU
+        bc_branch = Conv2D(48, (5, 5), strides=(2, 2), activation='relu', padding="valid", name='BC_Conv3')(bc_branch)
+        # ? L4: CONV => RELU
+        bc_branch = Conv2D(64, (3, 3), activation='relu', padding="valid", name='BC_Conv4')(bc_branch)
+        # ? L5: CONV => RELU
+        bc_branch = Conv2D(64, (3, 3), activation='relu', padding="valid", name='BC_Conv5')(bc_branch)
+        # ? Flatten
+        bc_branch = Flatten()(bc_branch)
 
         # ? Initial Fully Connected
         prediction = Dense(1164, kernel_initializer='normal', activation='relu', name='BC_FC1')(bc_branch)
@@ -54,28 +58,30 @@ class cbcNet:
         y = Dense(2, kernel_initializer='normal', name='BCB_Out')(y)
 
         # ? Switch
-        prediction = Switch(Less_equal(anomaly, 0.5), x, y, name="Prediction")
-        return prediction, anomaly
+        prediction = Switch(Less_equal(anomaly_inject, 0.5), x, y, name="Prediction")
+        return prediction
 
     @staticmethod
     def get_model(lr, epochs, input_shape=(150, 200, 3)):
         # ! Define input
         rgb_input = tf.keras.Input(shape=input_shape)
+        anomaly_input = tf.keras.Input(shape=())
         # TODO: Add Velocity Input
 
         # ! Build Structure
-        (driving_cmd, anomaly_detection) = cbcNet.build_cbc_net(rgb_input)
-        model = tf.keras.Model(inputs=rgb_input, outputs=[driving_cmd, anomaly_detection], name="cbcNet")
+        driving_cmd = cbcNet.build_cbc_net(rgb_input)
+        cmd_model = tf.keras.Model(inputs=rgb_input, outputs=driving_cmd, name="cbcNet")
+        anomaly_model = tf.keras.Model(inputs=rgb_input, outputs=anomaly_detection, name="cbcNet_anomaly")
         # ! Setup Optimizer
         opt = tf.keras.optimizers.Adam(lr=lr, decay=lr / epochs)
         # ! Compile Model
-        losses = {"tf.keras.backend.switch": "mse", "Anomaly_Out": "mse"}
-        loss_weights = {"tf.keras.backend.switch": 10, "Anomaly_Out": 1}
-
-        model.compile(
-            optimizer=opt, loss=losses, loss_weights=loss_weights
+        cmd_model.compile(
+            optimizer=opt, loss="mse"
         )
-        return model
+        anomaly_model.compile(
+            optimizer=opt, loss="binary_crossentropy", metrics=['accuracy']
+        )
+        return cmd_model, anomaly_model
 
     @staticmethod
     def get_inference(weigths="cbcNet.h5", input_shape=(150, 200, 3)):

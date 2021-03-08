@@ -27,36 +27,34 @@ class cbcNet:
 
         # ? Anomaly Detector:
         # ? L1: CONV => RELU
-        anomaly_branch = Conv2D(24, (5, 5), strides=(2, 2), activation='relu', padding="valid", name='AN_Conv1')(
+        anomaly_branch = Conv2D(24, (5, 5), strides=(2, 2), padding="valid", activation='relu', name='AN_Conv1')(
             normalized_image)
         # ? L2: CONV => RELU
-        anomaly_branch = Conv2D(36, (5, 5), strides=(2, 2), activation='relu', padding="valid", name='AN_Conv2')(
+        anomaly_branch = Conv2D(36, (5, 5), strides=(2, 2), padding="valid", activation='relu', name='AN_Conv2')(
             anomaly_branch)
         # ? L3: CONV => RELU
-        anomaly_branch = Conv2D(64, (3, 3), activation='relu', padding="valid", name='AN_Conv3')(anomaly_branch)
+        anomaly_branch = Conv2D(64, (3, 3), padding="valid", activation='relu', name='AN_Conv3')(anomaly_branch)
         # ? Flatten
         anomaly_branch = Flatten()(anomaly_branch)
         # ? Fully Connected
-        anomaly_branch = Dense(50, kernel_initializer='normal', activation='relu', name='AN_FC1')(anomaly_branch)
-        anomaly_branch = Dense(10, kernel_initializer='normal', activation='relu', name='AN_FC2')(anomaly_branch)
+        anomaly_branch = Dense(100, kernel_initializer='normal', activation='relu', name='AN_FC1')(anomaly_branch)
+        anomaly_branch = Dense(50, kernel_initializer='normal', activation='relu', name='AN_FC2')(anomaly_branch)
+        anomaly_branch = Dense(10, kernel_initializer='normal', activation='relu', name='AN_FC3')(anomaly_branch)
         anomaly = Dense(1, kernel_initializer='normal', activation='sigmoid', name="Anomaly_Out")(anomaly_branch)
 
         # ? Initial Fully Connected
         prediction = Dense(1164, kernel_initializer='normal', activation='relu', name='BC_FC1')(bc_branch)
-        prediction = Dense(500, kernel_initializer='normal', activation='relu', name='BC_FC2')(prediction)
-
         x = Dense(500, kernel_initializer='normal', activation='relu', name='ANB_FC1')(prediction)
         x = Dense(50, kernel_initializer='normal', activation='relu', name='ANB_FC2')(x)
         x = Dense(10, kernel_initializer='normal', activation='relu', name='ANB_FC3')(x)
         x = Dense(2, kernel_initializer='normal', name='ANB_Out')(x)
-
         y = Dense(500, kernel_initializer='normal', activation='relu', name='BCB_FC1')(prediction)
         y = Dense(50, kernel_initializer='normal', activation='relu', name='BCB_FC2')(y)
         y = Dense(10, kernel_initializer='normal', activation='relu', name='BCB_FC3')(y)
         y = Dense(2, kernel_initializer='normal', name='BCB_Out')(y)
 
         # ? Switch
-        prediction = Switch(Less_equal(anomaly, 0.5), x, y, name="prediction")
+        prediction = Switch(Less_equal(anomaly, 0.5), x, y)
         return prediction, anomaly
 
     @staticmethod
