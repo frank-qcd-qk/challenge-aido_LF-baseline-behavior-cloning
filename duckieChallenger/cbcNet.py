@@ -69,11 +69,11 @@ class cbcNet:
         # ! Setup Optimizer
         opt = tf.keras.optimizers.Adam(lr=lr, decay=lr / epochs)
         # ! Compile Model
-        losses = {"tf.where": "mse", "Anomaly_Out": "binary_crossentropy"}
+        losses = {"tf.where": "mse", "Anomaly_Out": "mse"}
         loss_weights = {"tf.where": 10, "Anomaly_Out": 1}
-        metrics = {"tf.where": "mse", "Anomaly_Out": "binary_accuracy"}
+
         model.compile(
-            optimizer=opt, loss=losses, loss_weights=loss_weights, metrics=metrics
+            optimizer=opt, loss=losses, loss_weights=loss_weights
         )
         return model
 

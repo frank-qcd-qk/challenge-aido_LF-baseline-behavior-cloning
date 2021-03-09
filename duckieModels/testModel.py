@@ -29,13 +29,6 @@ def load_anomaly_example(anomaly):
     return imgs
 
 
-def single_test(model):
-    image = np.zeros((150, 200, 3))
-    obs = np.expand_dims(image, axis=0)
-    output = model.predict(obs)
-    print(output)
-
-
 def naive_test(model):
     imgs = load_anomaly_example(anomaly=True)
     for an_img in imgs:
@@ -114,5 +107,5 @@ def model_vis(model):
 
 
 if __name__ == "__main__":
-    loaded_model = cbcNet.get_inference(weigths="cbcNet_LinkMethod_best_validation.h5")
-    single_test(loaded_model)
+    loaded_model = cbcNet.get_inference(weigths="cbcNetBest_Loss.h5")
+    naive_test(loaded_model)
