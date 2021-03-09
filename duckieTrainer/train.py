@@ -67,7 +67,7 @@ class DuckieTrainer:
             epochs=EPOCHS,
             callbacks=callbacks_list,
             shuffle=True,
-            batch_size=BATCH_SIZE,
+            batch_size=batch_size,
             verbose=0,
         )
 
