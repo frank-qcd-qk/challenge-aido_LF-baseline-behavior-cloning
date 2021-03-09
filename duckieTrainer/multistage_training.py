@@ -4,22 +4,22 @@ import os
 from datetime import datetime
 from pathlib import Path
 
-import numpy as np
 import tensorflow as tf
 from sklearn.model_selection import train_test_split
 
 from duckieLog.log_util import read_dataset
-from duckieModels.cbcNet import cbcNet
+from duckieModels.cbcNetv2 import cbcNetv2
 
 MODEL_NAME = "cbcNet"
 logging.basicConfig(level=logging.INFO)
 
 # ! Default Configuration
-EPOCHS = 50
+EPOCHS = 100
 INIT_LR = 1e-3
 BATCH_SIZE = 128
 TRAIN_PERCENT = 0.8
 TRAINING_DATASET = "train.log"
+OPMODE = "bc"
 
 
 class DuckieTrainer:
@@ -31,7 +31,7 @@ class DuckieTrainer:
             log_file,
             split,
     ):
-
+        self.batch_size = batch_size
         # 0. Setup Folder Structure
         self.create_dirs()
 
@@ -42,27 +42,32 @@ class DuckieTrainer:
 
         # 2. Split training and testing
         (
-            observation_train,
-            observation_valid,
-            prediction_train,
-            prediction_valid,
-            anomaly_train,
-            anomaly_valid
+            self.observation_train,
+            self.observation_valid,
+            self.prediction_train,
+            self.prediction_valid,
+            self.anomaly_train,
+            self.anomaly_valid
 
         ) = train_test_split(
             self.observation, self.prediction, self.anomaly, test_size=1 - split, shuffle=False
         )
-        print(np.sum(anomaly_train))
-        model = cbcNet.get_model(init_lr, epochs)
-        callbacks_list = self.configure_callbacks()
+        self.cmd_model, self.anomaly_model = cbcNetv2.get_model(init_lr, epochs)
+        if OPMODE == "Anomaly":
+            self.train_anomaly_detector()
+        else:
+            self.train_bc_net()
+
+    def train_anomaly_detector(self):
+        callbacks_list = self.configure_callbacks("anomaly")
 
         # 11. GO!
-        history = model.fit(
-            x=observation_train,
-            y={"tf.where": prediction_train, "Anomaly_Out": anomaly_train},
+        history = self.anomaly_model.fit(
+            x=self.observation_train,
+            y=self.anomaly_train,
             validation_data=(
-                observation_valid,
-                {"tf.where": prediction_valid, "Anomaly_Out": anomaly_valid},
+                self.observation_valid,
+                self.anomaly_valid,
             ),
             epochs=EPOCHS,
             callbacks=callbacks_list,
@@ -71,7 +76,23 @@ class DuckieTrainer:
             verbose=0,
         )
 
-        model.save(f"trainedModel/{MODEL_NAME}.h5")
+    def train_bc_net(self):
+        callbacks_list = self.configure_callbacks("BC")
+
+        # 11. GO!
+        history = self.cmd_model.fit(
+            x=[self.observation_train, self.anomaly_train],
+            y=self.prediction_train,
+            validation_data=(
+                [self.observation_valid, self.anomaly_valid],
+                self.prediction_valid
+            ),
+            epochs=EPOCHS * 2,
+            callbacks=callbacks_list,
+            shuffle=True,
+            batch_size=BATCH_SIZE,
+            verbose=0,
+        )
 
     def create_dirs(self):
         try:
@@ -83,20 +104,20 @@ class DuckieTrainer:
             )
             exit()
 
-    def configure_callbacks(self):
+    def configure_callbacks(self, type):
         tensorboard = tf.keras.callbacks.TensorBoard(
             log_dir="trainlogs/{}".format(
-                f'{MODEL_NAME}-{datetime.now().strftime("%Y-%m-%d@%H:%M:%S")}'
+                f'{MODEL_NAME}-{type}-{datetime.now().strftime("%Y-%m-%d@%H:%M:%S")}'
             )
         )
 
-        filepath1 = f"trainedModel/{MODEL_NAME}Best_Validation.h5"
+        filepath1 = f"trainedModel/{MODEL_NAME}-{type}-Best_Validation.h5"
         checkpoint1 = tf.keras.callbacks.ModelCheckpoint(
             filepath1, monitor="val_loss", verbose=1, save_best_only=True, mode="min"
         )
 
         # ? Keep track of the best loss model
-        filepath2 = f"trainedModel/{MODEL_NAME}Best_Loss.h5"
+        filepath2 = f"trainedModel/{MODEL_NAME}-{type}-Best_Loss.h5"
         checkpoint2 = tf.keras.callbacks.ModelCheckpoint(
             filepath2, monitor="loss", verbose=1, save_best_only=True, mode="min"
         )

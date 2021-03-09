@@ -1,6 +1,5 @@
 import tensorflow as tf
 from tensorflow.keras.backend import less_equal as Less_equal
-from tensorflow.keras.backend import switch as Switch
 from tensorflow.keras.layers import Conv2D, Lambda, Flatten, Dense
 
 
@@ -48,45 +47,52 @@ class cbcNetv2:
 
         # ? Initial Fully Connected
         prediction = Dense(1164, kernel_initializer='normal', activation='relu', name='BC_FC1')(bc_branch)
+
         x = Dense(500, kernel_initializer='normal', activation='relu', name='ANB_FC1')(prediction)
         x = Dense(50, kernel_initializer='normal', activation='relu', name='ANB_FC2')(x)
         x = Dense(10, kernel_initializer='normal', activation='relu', name='ANB_FC3')(x)
         x = Dense(2, kernel_initializer='normal', name='ANB_Out')(x)
+
         y = Dense(500, kernel_initializer='normal', activation='relu', name='BCB_FC1')(prediction)
         y = Dense(50, kernel_initializer='normal', activation='relu', name='BCB_FC2')(y)
         y = Dense(10, kernel_initializer='normal', activation='relu', name='BCB_FC3')(y)
         y = Dense(2, kernel_initializer='normal', name='BCB_Out')(y)
 
         # ? Switch
-        prediction = Switch(Less_equal(anomaly_inject, 0.5), x, y, name="Prediction")
+        prediction = tf.where(Less_equal(anomaly_inject, 0.5), x, y, name="Prediction")
         return prediction
 
     @staticmethod
     def get_model(lr, epochs, input_shape=(150, 200, 3)):
         # ! Define input
         rgb_input = tf.keras.Input(shape=input_shape)
-        anomaly_input = tf.keras.Input(shape=())
-        # TODO: Add Velocity Input
+        anomaly_input = tf.keras.Input(shape=(1))
 
         # ! Build Structure
-        driving_cmd = cbcNet.build_cbc_net(rgb_input)
-        cmd_model = tf.keras.Model(inputs=rgb_input, outputs=driving_cmd, name="cbcNet")
-        anomaly_model = tf.keras.Model(inputs=rgb_input, outputs=anomaly_detection, name="cbcNet_anomaly")
+        driving_cmd = cbcNetv2.build_cbc_net(rgb_input, anomaly_input)
+        anomaly_output = cbcNetv2.build_cbc_anomaly_detector(rgb_input)
+        cmd_model = tf.keras.Model(inputs=[rgb_input, anomaly_input], outputs=driving_cmd, name="cbcNet")
+        anomaly_model = tf.keras.Model(inputs=rgb_input, outputs=anomaly_output, name="cbcNet_anomaly")
         # ! Setup Optimizer
         opt = tf.keras.optimizers.Adam(lr=lr, decay=lr / epochs)
         # ! Compile Model
         cmd_model.compile(
-            optimizer=opt, loss="mse"
+            optimizer=opt, loss="mse", metrics="mse"
         )
         anomaly_model.compile(
-            optimizer=opt, loss="binary_crossentropy", metrics=['accuracy']
+            optimizer=opt, loss="binary_crossentropy", metrics=['binary_accuracy', 'binary_crossentropy']
         )
         return cmd_model, anomaly_model
 
     @staticmethod
-    def get_inference(weigths="cbcNet.h5", input_shape=(150, 200, 3)):
+    def get_anomaly_inference(weigths="cbcNet.h5", input_shape=(150, 200, 3)):
         rgb_input = tf.keras.Input(shape=input_shape)
-        (driving_cmd, anomaly_detection) = cbcNet.build_cbc_net(rgb_input)
-        model = tf.keras.Model(inputs=rgb_input, outputs=[driving_cmd, anomaly_detection], name="cbcNet")
+        anomaly_detection = cbcNetv2.build_cbc_anomaly_detector(rgb_input)
+        model = tf.keras.Model(inputs=rgb_input, outputs=anomaly_detection, name="cbcNet-anomaly")
         model.load_weights(weigths)
         return model
+
+    @staticmethod
+    def get_bc_inference(weigths="cbcNet.h5"):
+        rgb_input = tf.keras.Input(shape=input_shape)
+        anomaly_input = tf.keras.Input(shape=(1))
